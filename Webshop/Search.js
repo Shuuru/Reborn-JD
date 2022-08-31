@@ -6,7 +6,7 @@
 
 let SearchBarHelpers = {
     //Exact name option for O(1) searching
-    allStoreItemsByName: [],
+    allStoreItemsByName: {},
     //Approximate name option for O(n) searching
     allStoreItemsByIndex: [],
     searchTerm: false,
@@ -19,11 +19,14 @@ let SearchBarHelpers = {
     lastTermSearched: "",
     currentlyThrottled: false,
     currentlyDrawing: false,
-    GetShopRowFromItemSpan: (span, rowId) => {
+    getShopRowFromItemSpan: (span, rowId) => {
         return span.parent().parent().parent().parent().eq(rowId);
     },
-    showItemHandler: (cat, subcat, searchTerm) => {
-        $('#searchResultFeedback').css('visibility', 'hidden');            
+    setItemRowBackgroundColor: (span, rowId, color) => {
+        return SearchBarHelpers.getShopRowFromItemSpan(span, rowId).css('background-color', color);
+    },
+    showItemHandler: (cat, subcat, searchTerm) => {    
+        SearchBarHelpers.showSearchFeedback(false);   
             
         let repeatUntilNotLocked = setInterval(() => {
             if (lock == 0) {
@@ -49,8 +52,9 @@ let SearchBarHelpers = {
                 .done(function(json) {
                     json.items.forEach((item) => {
                         //Save first occurrence of an item only
-                        if(typeof SearchBarHelpers.allStoreItemsByName[item.item_name.trim().toUpperCase()] == "undefined")
-                            SearchBarHelpers.allStoreItemsByName[item.item_name.trim().toUpperCase()] = item;
+                        let itemObject = SearchBarHelpers.allStoreItemsByName[item.item_name.trim().toUpperCase()];
+                        if(typeof itemObject == "undefined")
+                            itemObject = item;
 
                         SearchBarHelpers.allStoreItemsByIndex.push(item);
                     });
@@ -86,41 +90,29 @@ let SearchBarHelpers = {
             //If currently in an ajax request, it means the store is drawing, so we will not
             //Ask for it to re-draw at this moment, instead we'll try again in 200ms
             if (SearchBarHelpers.currentlyDrawing)
-                return setTimeout(() => {
-                    SearchBarHelpers.drawStore();
-                }, 200);
+                return SearchBarHelpers.callDrawStoreAfterDelay();
 
             //Add a 200ms delay between searches for quick typers to not re-query too often
             let currentTime = new Date();
             if ((currentTime - SearchBarHelpers.lastTimeSearched < 200 || SearchBarHelpers.currentlyDrawing) && (SearchBarHelpers.searchTerm !== SearchBarHelpers.lastTermSearched)) {
                 SearchBarHelpers.currentlyThrottled = true;
 
-                return setTimeout(() => {
-                    SearchBarHelpers.drawStore();
-                }, 200);
+                return SearchBarHelpers.callDrawStoreAfterDelay();
             } 
             else {
                 SearchBarHelpers.currentlyThrottled = false;
                 SearchBarHelpers.lastTimeSearched = currentTime;
             }
 
+            let itemObject;
+
             //Find exact search in O(1)
             if (typeof SearchBarHelpers.allStoreItemsByName[SearchBarHelpers.searchTerm] !== "undefined") {
-                let itemObject = SearchBarHelpers.allStoreItemsByName[SearchBarHelpers.searchTerm];
-
-                let sameCats = SearchBarHelpers.setNewCats(itemObject.cat, itemObject.subcat);
-
-                //If current page contains search text, highlight only
-                if (sameCats)
-                    SearchBarHelpers.updateRowHighlighting();
-                else
-                    SearchBarHelpers.showItemHandler(itemObject.cat, itemObject.subcat, SearchBarHelpers.searchTerm);
+                itemObject = SearchBarHelpers.allStoreItemsByName[SearchBarHelpers.searchTerm];
             }
             //Find approximate search in O(n)
             else {
-                let checkedItems = 0;
                 for (item of SearchBarHelpers.allStoreItemsByIndex) {
-                    checkedItems++;
 
                     if (item && item.item_name && item.item_name.trim().toUpperCase().includes(SearchBarHelpers.searchTerm)) {
                         let sameCats = SearchBarHelpers.setNewCats(item.cat, item.subcat);
@@ -132,20 +124,30 @@ let SearchBarHelpers = {
 
                         break;
                     }
-
-                    //If on final check, item is not found, we'll default to before-search tab for now
-                    //And a simple, non-obtrusive message saying no item found
-                    if (checkedItems == SearchBarHelpers.allStoreItemsByIndex.length) {
-                        SearchBarHelpers.revertShopView();
-                        $('#searchResultFeedback').css('visibility', 'visible');
-                    }
                 }
+            }
+
+            //Show item by highlighting if in current page, or change page and then highlight
+            if(itemObject) {
+                let sameCats = SearchBarHelpers.setNewCats(itemObject.cat, itemObject.subcat);
+
+                if (sameCats)
+                    SearchBarHelpers.updateRowHighlighting();
+                else
+                    SearchBarHelpers.showItemHandler(item.cat, item.subcat, SearchBarHelpers.searchTerm);
+            }
+            /**
+             * Item is not found, so we'll restore shop view and show a simple, non-obtrusive message saying no item found
+             */
+            else {
+                SearchBarHelpers.revertShopView();
+                SearchBarHelpers.showSearchFeedback(true);
             }
         }
         //Default to before-search tab
         else {
             SearchBarHelpers.revertShopView();
-            $('#searchResultFeedback').css('visibility', 'hidden');
+            SearchBarHelpers.showSearchFeedback(false);
             SearchBarHelpers.currentlySearching = false;
         }
     },
@@ -155,15 +157,15 @@ let SearchBarHelpers = {
         if (SearchBarHelpers.searchTerm && SearchBarHelpers.searchTerm.length > 0 && SearchBarHelpers.currentlySearching) {
             for (let itemArrayIterator = 0; itemArrayIterator < itemArray.length; itemArrayIterator++) {
                 if (SearchBarHelpers.searchTerm && SearchBarHelpers.searchTerm.length > 0 && itemArray[itemArrayIterator].innerHTML.trim().toUpperCase().includes(SearchBarHelpers.searchTerm))
-                    SearchBarHelpers.GetShopRowFromItemSpan(itemArray, itemArrayIterator).css('background-color', 'rgb(255, 255, 0, 0.25)');
+                    SearchBarHelpers.setItemRowBackgroundColor(itemArray, itemArrayIterator, 'rgb(255, 255, 0, 0.25)');
                 else
-                    SearchBarHelpers.GetShopRowFromItemSpan(itemArray, itemArrayIterator).css('background-color', '');
+                    SearchBarHelpers.setItemRowBackgroundColor(itemArray, itemArrayIterator, '');
             }
         }
         //Reset all coloring
         else {
             for (let itemArrayIterator = 0; itemArrayIterator < itemArray.length; itemArrayIterator++) {
-                SearchBarHelpers.GetShopRowFromItemSpan(itemArray, itemArrayIterator).css('background-color', '');
+                SearchBarHelpers.setItemRowBackgroundColor(itemArray, itemArrayIterator, '');
             }
         }
     },
@@ -187,6 +189,14 @@ let SearchBarHelpers = {
     },
     getCharacterId: () => {
         return parseInt($('#target_character').val());
+    },
+    showSearchFeedback: (show) => {
+        $('#searchResultFeedback').css('visibility', (show ? 'visible' : 'hidden'));
+    },
+    callDrawStoreAfterDelay: () => {
+        return setTimeout(() => {
+            SearchBarHelpers.drawStore();
+        }, 200);
     }
 }
 
@@ -205,8 +215,8 @@ let InitStoreSearch = () => {
                 `<div style="display: table-cell; background: #eee; color: #777; padding: 0 12px; border-radius: 4px 0px 0px 4px;">Search</div>` +
                 `<div style="display: table-cell;">` +
                     `<input type="text" id="searchInput" style="width: 200px;border: 0;display: block;padding: 8px;border-radius: 0px 4px 4px 0px;" class="role_sel" oninput="drawStore()">` +
-                    `</div>` +
-                `</div>`
+                `</div>` +
+            `</div>`
         );
     
     //Add search feedback above search box
