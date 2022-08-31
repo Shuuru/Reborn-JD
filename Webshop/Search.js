@@ -191,10 +191,22 @@ let InitStoreSearch = () => {
     SearchBarHelpers.getAllStoreItems();
 
     //Add search after last shop category
-    $('.account-block-tabs > li:last-child').after(`<div style="padding-left: 100px;padding-bottom: 1px;"><div style="display: table-cell;background: #eee;color: #777;padding: 0 12px;border-radius: 4px 0px 0px 4px;">Search</div><div style="display: table-cell;"><input type="text" id="searchInput" style="width: 200px;border: 0;display: block;padding: 8px;border-radius: 0px 4px 4px 0px;" class="role_sel" oninput="drawStore()"></div></div>`);
+    $('.account-block-tabs > li:last-child')
+        .after(
+            `<div style="padding-left: 100px;padding-bottom: 1px;">` +
+                `<div style="display: table-cell; background: #eee; color: #777; padding: 0 12px; border-radius: 4px 0px 0px 4px;">Search</div>` +
+                `<div style="display: table-cell;">` +
+                    `<input type="text" id="searchInput" style="width: 200px;border: 0;display: block;padding: 8px;border-radius: 0px 4px 4px 0px;" class="role_sel" oninput="drawStore()">` +
+                    `</div>` +
+                `</div>`
+        );
     
     //Add search feedback above search box
-    $('.account-block-tabs').before('<div style="visibility: hidden;margin-top:0px;"><span id="searchResultFeedback" style="float:right; color:red">No item found with that name!</span></div>');
+    $('.account-block-tabs')
+        .before('<div style="visibility: hidden;margin-top:0px;">' +
+                    '<span id="searchResultFeedback" style="float:right; color:red">No item found with that name!</span>' +
+                '</div>'
+        );
 
     $(document).ajaxStart(function() {
         SearchBarHelpers.currentlyDrawing = true;
