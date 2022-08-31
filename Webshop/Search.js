@@ -115,13 +115,7 @@ let SearchBarHelpers = {
                 for (item of SearchBarHelpers.allStoreItemsByIndex) {
 
                     if (item && item.item_name && item.item_name.trim().toUpperCase().includes(SearchBarHelpers.searchTerm)) {
-                        let sameCats = SearchBarHelpers.setNewCats(item.cat, item.subcat);
-
-                        if (sameCats)
-                            SearchBarHelpers.updateRowHighlighting();
-                        else
-                            SearchBarHelpers.showItemHandler(item.cat, item.subcat, SearchBarHelpers.searchTerm);
-
+                        itemObject = item;
                         break;
                     }
                 }
