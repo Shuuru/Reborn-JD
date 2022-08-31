@@ -45,7 +45,8 @@ let SearchBarHelpers = {
                         cat2: subcat
                     },
                     dataType: "JSON"
-                }).done(function(json) {
+                })
+                .done(function(json) {
                     json.items.forEach((item) => {
                         //Save first occurrence of an item only
                         if(typeof SearchBarHelpers.allStoreItemsByName[item.item_name.trim().toUpperCase()] == "undefined")
@@ -67,6 +68,10 @@ let SearchBarHelpers = {
         }
     },
     drawStore: () => {
+        //If no character has been chosen, do nothing
+        if(SearchBarHelpers.getCharacterId() == 0)
+            return;
+
         SearchBarHelpers.searchTerm = $('#searchInput').val().trim().toUpperCase();
 
         //If beginning to search, store what tab user is currently in to restore them here if they erase everything
@@ -179,6 +184,9 @@ let SearchBarHelpers = {
         SearchBarHelpers.currentSubCat = newSubCat;
 
         return sameCats;
+    },
+    getCharacterId: () => {
+        return parseInt($('#target_character').val());
     }
 }
 
