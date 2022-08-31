@@ -47,11 +47,11 @@ let SearchBarHelpers = {
                     dataType: "JSON"
                 }).done(function(json) {
                     json.items.forEach((item) => {
+                        //Save first occurrence of an item only
                         if(typeof SearchBarHelpers.allStoreItemsByName[item.item_name.trim().toUpperCase()] == "undefined")
                             SearchBarHelpers.allStoreItemsByName[item.item_name.trim().toUpperCase()] = item;
 
-                        if(!SearchBarHelpers.allStoreItemsByIndex.some(existingItem => existingItem.item_name.toUpperCase() == item.item_name.toUpperCase()))
-                            SearchBarHelpers.allStoreItemsByIndex.push(item);
+                        SearchBarHelpers.allStoreItemsByIndex.push(item);
                     });
 
                     //Sort array to prefer returning items earlier in the shop (lower cat, subcat)
