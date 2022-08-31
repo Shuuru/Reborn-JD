@@ -113,7 +113,6 @@ let SearchBarHelpers = {
             //Find approximate search in O(n)
             else {
                 for (item of SearchBarHelpers.allStoreItemsByIndex) {
-
                     if (item && item.item_name && item.item_name.trim().toUpperCase().includes(SearchBarHelpers.searchTerm)) {
                         itemObject = item;
                         break;
@@ -128,7 +127,7 @@ let SearchBarHelpers = {
                 if (sameCats)
                     SearchBarHelpers.updateRowHighlighting();
                 else
-                    SearchBarHelpers.showItemHandler(item.cat, item.subcat, SearchBarHelpers.searchTerm);
+                    SearchBarHelpers.showItemHandler(itemObject.cat, itemObject.subcat, SearchBarHelpers.searchTerm);
             }
             /**
              * Item is not found, so we'll restore shop view and show a simple, non-obtrusive message saying no item found
