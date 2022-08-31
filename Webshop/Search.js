@@ -131,7 +131,7 @@ $(document).ajaxComplete(function() {
         if (searchTerm && searchTerm.length > 0 && currentlySearching) {
             for (let itemArrayIterator = 0; itemArrayIterator < itemArray.length; itemArrayIterator++) {
                 if (searchTerm && searchTerm.length > 0 && itemArray[itemArrayIterator].innerHTML.trim().toUpperCase().includes(searchTerm))
-                    itemArray.parent().parent().parent().parent().eq(itemArrayIterator).css('background-color', 'yellow');
+                    itemArray.parent().parent().parent().parent().eq(itemArrayIterator).css('background-color', 'rgb(255, 255, 0, 0.25)');
                 else
                     itemArray.parent().parent().parent().parent().eq(itemArrayIterator).css('background-color', '');
             }
